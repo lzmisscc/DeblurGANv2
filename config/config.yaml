@@ -3,47 +3,45 @@ project: deblur_gan
 experiment_desc: fpn
 
 train:
-  files_a: &FILES_A /datasets/my_dataset/**/*.jpg
-  files_b: *FILES_A
   size: &SIZE 256
   crop: random
-  preload: &PRELOAD false
-  preload_size: &PRELOAD_SIZE 0
+  # preload: &PRELOAD false
+  # preload_size: &PRELOAD_SIZE 0
   bounds: [0, .9]
   scope: geometric
   corrupt: &CORRUPT
-    - name: cutout
-      prob: 0.5
-      num_holes: 3
-      max_h_size: 25
-      max_w_size: 25
-    - name: jpeg
-      quality_lower: 70
-      quality_upper: 90
+    # - name: cutout
+    #   prob: 0.5
+    #   num_holes: 3
+    #   max_h_size: 25
+    #   max_w_size: 25
+    # - name: jpeg
+    #   quality_lower: 70
+    #   quality_upper: 90
     - name: motion_blur
     - name: median_blur
-    - name: gamma
+    # - name: gamma
     - name: rgb_shift
     - name: hsv_shift
     - name: sharpen
 
 val:
-  files_a: *FILES_A
-  files_b: *FILES_A
+  # files_a: *FILES_A
+  # files_b: *FILES_A
   size: *SIZE
   scope: geometric
   crop: center
-  preload: *PRELOAD
-  preload_size: *PRELOAD_SIZE
+  # preload: *PRELOAD
+  # preload_size: *PRELOAD_SIZE
   bounds: [.9, 1]
-  corrupt: *CORRUPT
+  # corrupt: *CORRUPT
 
 phase: train
 warmup_num: 3
 model:
   g_name: fpn_inception
   blocks: 9
-  d_name: double_gan # may be no_gan, patch_gan, double_gan, multi_scale
+  d_name: patch_gan # may be no_gan, patch_gan, double_gan, multi_scale
   d_layers: 3
   content_loss: perceptual
   adv_lambda: 0.001
@@ -52,10 +50,10 @@ model:
   norm_layer: instance
   dropout: True
 
-num_epochs: 200
-train_batches_per_epoch: 1000
-val_batches_per_epoch: 100
-batch_size: 1
+num_epochs: 20000
+# train_batches_per_epoch: 1000
+val_batches_per_epoch: 1
+batch_size: 20
 image_size: [256, 256]
 
 optimizer:
@@ -63,5 +61,5 @@ optimizer:
   lr: 0.0001
 scheduler:
   name: linear
-  start_epoch: 50
+  start_epoch: 10000
   min_lr: 0.0000001
