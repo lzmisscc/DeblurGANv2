@@ -37,7 +37,7 @@ class AugTest(unittest.TestCase):
                        'size': 32,
                        }
         for b in ([0, 1], [0, 0.9]):
-            for scope in ('strong', 'weak'):
+            for scope in ('geometric', 'weak'):
                 for crop in ('random', 'center'):
                     for preload in (0, 1):
                         for preload_size in (0, 64):

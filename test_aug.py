@@ -12,7 +12,7 @@ class AugTest(unittest.TestCase):
         return img.copy(), img.copy()
 
     def test_aug(self):
-        for scope in ('strong', 'weak'):
+        for scope in ('geometric', 'weak'):
             for crop in ('random', 'center'):
                 aug_pipeline = get_transforms(80, scope=scope, crop=crop)
                 a, b = self.make_images()

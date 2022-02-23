@@ -140,3 +140,43 @@ class PairedDataset(Dataset):
                              normalize_fn=normalize_fn,
                              transform_fn=transform_fn,
                              verbose=verbose)
+
+
+from pathlib import Path
+from PIL import Image
+from torchvision.transforms import transforms
+
+class NoPairDataset(Dataset):
+    def __init__(self, dirname, aug_pair_fn=None, aug_fn=None, im_size: int=256, chunk=True) -> None:
+        super().__init__()
+        self.img_list = list(Path(dirname).rglob("*.png")) + list(Path(dirname).rglob("*.jpg"))
+        self.im_size = im_size
+        self.aug_pair_fn = aug_pair_fn
+        self.aug_fn = aug_fn
+        self.chunk = chunk
+        
+    def __len__(self, ):
+        return len(self.img_list)
+    
+    def __getitem__(self, index):
+        img_name = self.img_list[index]
+        im = Image.open(img_name).convert("RGB")
+        im = transforms.ToTensor()(im)
+        if self.chunk:
+            clean, tilt = im.chunk(2, -1)
+        else:
+            clean, tilt = im, im
+            
+        if clean.shape[-1] < self.im_size:
+            clean = transforms.Resize((self.im_size, self.im_size))(clean)
+            tilt = transforms.Resize((self.im_size, self.im_size))(tilt)
+        clean, tilt = np.array(clean.permute(1,2,0)), np.array(tilt.permute(1,2,0))
+        clean, tilt = (clean * 255).astype(np.uint8), (tilt * 255).astype(np.uint8)
+        
+        if self.aug_pair_fn:
+            clean, tilt = self.aug_pair_fn(clean, tilt)
+        if self.aug_fn:
+            tilt = self.aug_fn(tilt)
+            
+        clean, tilt = transforms.ToTensor()(clean), transforms.ToTensor()(tilt)
+        return clean, tilt

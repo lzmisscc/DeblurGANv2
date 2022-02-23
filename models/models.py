@@ -9,11 +9,11 @@ class DeblurModel(nn.Module):
         super(DeblurModel, self).__init__()
 
     def get_input(self, data):
-        img = data['a']
-        inputs = img
-        targets = data['b']
-        inputs, targets = inputs.cuda(), targets.cuda()
-        return inputs, targets
+        # img = data['a']
+        # inputs = img
+        # targets = data['b']
+        inputs, targets = data[0].cuda(), data[1].cuda()
+        return (inputs, targets)[::-1]
 
     def tensor2im(self, image_tensor, imtype=np.uint8):
         image_numpy = image_tensor[0].cpu().float().numpy()

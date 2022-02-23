@@ -46,10 +46,18 @@ class Trainer:
             if self.metric_counter.update_best_model():
                 torch.save({
                     'model': self.netG.state_dict()
-                }, 'best_{}.h5'.format(self.config['experiment_desc']))
+                }, 'weights/best_{}.h5'.format(self.config['experiment_desc']))
+            if epoch % 1000 == 0:
+                torch.save({
+                    'model': self.netG.state_dict()
+                }, 'weights/{:0>9}_{}.h5'.format(epoch, self.config['experiment_desc']))
+
             torch.save({
-                'model': self.netG.state_dict()
-            }, 'last_{}.h5'.format(self.config['experiment_desc']))
+                'model': self.netG.state_dict(),
+                'model_D': self.netG.state_dict(),
+                'optim': (self.optimizer_G.state_dict(), self.optimizer_D.state_dict())
+            }, 'weights/last_{}.h5'.format(self.config['experiment_desc']))
+
             print(self.metric_counter.loss_message())
             logging.debug("Experiment Name: %s, Epoch: %d, Loss: %s" % (
                 self.config['experiment_desc'], epoch, self.metric_counter.loss_message()))
@@ -168,7 +176,11 @@ class Trainer:
         self.optimizer_D = self._get_optim(self.adv_trainer.get_params())
         self.scheduler_G = self._get_scheduler(self.optimizer_G)
         self.scheduler_D = self._get_scheduler(self.optimizer_D)
+        # load state dict
+        self.netG.load_state_dict(torch.load("best_fpn.h5", map_location='cpu')['model'])
 
+from dataset import NoPairDataset
+from aug import get_transforms, get_corrupt_function
 
 def main(config_path='config/config.yaml'):
     with open(config_path, 'r') as f:
@@ -180,8 +192,7 @@ def main(config_path='config/config.yaml'):
                              num_workers=0 if os.environ.get('DEBUG') else cpu_count(),
                              shuffle=True, drop_last=True)
 
-    datasets = map(config.pop, ('train', 'val'))
-    datasets = map(PairedDataset.from_config, datasets)
+    datasets = (NoPairDataset("datasets/tilt", get_transforms(256), get_corrupt_function(config=config['train']['corrupt'])), NoPairDataset("datasets/tilt", get_transforms(256)))
     train, val = map(get_dataloader, datasets)
     trainer = Trainer(config, train=train, val=val)
     trainer.train()
